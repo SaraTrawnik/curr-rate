@@ -2,7 +2,18 @@
 #include <curl/curl.h>
 #include "str.h"
 
-int main(void) {
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        exit(EXIT_FAILURE);
+    }
+    struct string base;
+    init_string(&base);
+    writefunc(argv[1], 1, strlen(argv[1]), &base);
+
+    struct string url;
+    init_string(&url);
+    writefunc("https://api.exchangeratesapi.io/latest?", 1, strlen("https://api.exchangeratesapi.io/latest?"), &url);
+
     struct json_object *jobj;
     CURL *curl;
     CURLcode res;

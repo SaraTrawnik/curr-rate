@@ -19,6 +19,6 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s) {
     }
     memcpy(s->ptr+s->len, ptr, size*nmemb);
     s->ptr[newlen] = '\0';
+    s->len = newlen;
     return size*nmemb;
 }
-
