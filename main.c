@@ -2,6 +2,8 @@
 #include <curl/curl.h>
 #include "str.h"
 
+char *help = "curr-rate BASE [ CONVERT-TO ... ]\n\nmandatory args:\n    BASE        base to convert from\n    CONVERT-TO  converts BASE to following currencies\n";
+
 #define BASE "base="
 #define SYMBOLS "&symbols="
 #define COMMA ","
@@ -10,6 +12,7 @@ void generate_url(struct string *s, int argcount, char **fullarg);
 
 int main(int argc, char **argv) {
     if (argc < 3) { // needs at least two inputs
+        fprintf(stderr, "%s\n", help);
         exit(EXIT_FAILURE);
     }
 

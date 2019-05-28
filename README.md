@@ -5,10 +5,7 @@ Small app writen in C that gets you a current conversion rates.
 
 Usage:
 ```
-$> curr-rate [-h] BASE [ CONVERT-TO ... ]
-
-optional args:
-	-h      	prints help
+curr-rate BASE [ CONVERT-TO ... ]
 
 mandatory args:
     BASE    	base to convert from
