@@ -40,6 +40,8 @@ int main(int argc, char **argv) {
 
         jobj = json_tokener_parse(s.ptr);
         printf("%s\n", json_object_to_json_string_ext(jobj, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY));
+        
+        free(url.ptr);
         free(s.ptr);
         curl_easy_cleanup(curl);
     }
