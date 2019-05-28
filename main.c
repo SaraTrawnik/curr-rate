@@ -2,17 +2,19 @@
 #include <curl/curl.h>
 #include "str.h"
 
+#define BASE "base="
+#define SYMBOLS "&symbols="
+#define COMMA ","
+
+void generate_url(struct string *s, int argcount, char **fullarg);
+
 int main(int argc, char **argv) {
-    if (argc < 2) {
+    if (argc < 3) { // needs at least two inputs
         exit(EXIT_FAILURE);
     }
-    struct string base;
-    init_string(&base);
-    writefunc(argv[1], 1, strlen(argv[1]), &base);
 
     struct string url;
-    init_string(&url);
-    writefunc("https://api.exchangeratesapi.io/latest?", 1, strlen("https://api.exchangeratesapi.io/latest?"), &url);
+    generate_url(&url, argc, argv);
 
     struct json_object *jobj;
     CURL *curl;
@@ -24,7 +26,7 @@ int main(int argc, char **argv) {
         struct string s;
         init_string(&s);
 
-        curl_easy_setopt(curl, CURLOPT_URL, "https://api.exchangeratesapi.io/latest?symbols=GBP,USD"); // set rates for now
+        curl_easy_setopt(curl, CURLOPT_URL, url.ptr); // set rates for now
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
 
@@ -41,4 +43,20 @@ int main(int argc, char **argv) {
     
     curl_global_cleanup();
     return 0;
+}
+
+
+void generate_url(struct string *s, int argcount, char **fullarg) {
+    init_string(s);
+    writefunc("https://api.exchangeratesapi.io/latest?", 1, strlen("https://api.exchangeratesapi.io/latest?"), s);
+
+    writefunc(BASE, 1, strlen(BASE), s);
+    writefunc(fullarg[1], 1, strlen(fullarg[1]), s);
+    writefunc(SYMBOLS, 1, strlen(SYMBOLS), s);
+    for (int i = 2; i < argcount; i++) {
+        writefunc(fullarg[i], 1, strlen(fullarg[i]), s);
+        writefunc(COMMA, 1, strlen(COMMA), s);
+    }
+    s->len -= 1;
+    s->ptr[s->len] = '\0';
 }
