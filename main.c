@@ -88,9 +88,11 @@ int get_json(char *url, int show_prices) {
         curl_easy_strerror(res);
 
         read_json(response.ptr, show_prices);
-
+        
+        free(response.ptr)
         curl_easy_cleanup(curl);
     } else {
+        fprintf(stderr, "curl_easy_init() failed\n");
         return 1;
     }
     
