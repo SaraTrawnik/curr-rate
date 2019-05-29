@@ -13,7 +13,7 @@ char *help_str = "curr-rate [-hl] BASE [ CONVERT-TO ... ]\n\nmandatory args:\n  
 
 void generate_url(struct string *s, int argcount, char **fullarg);
 int get_json(char *url, int show_prices);
-int read_json(char *resp, int show_prices);
+void read_json(char *resp, int show_prices);
 
 int main(int argc, char **argv) {
     int list = 0;
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     }
 
     generate_url(&url, argc, argv);
-    if (!get_json(url.ptr, SHOW_PRICE)) {
+    if (get_json(url.ptr, SHOW_PRICE)) {
         fprintf(stderr, "get_json() failed\n");
         exit(EXIT_FAILURE);
     }
@@ -87,15 +87,8 @@ int get_json(char *url, int show_prices) {
             fprintf(stderr, "curl_easy_perform() failed\n");
         curl_easy_strerror(res);
 
-        if (!read_json(response.ptr, show_prices)) {
-            fprintf(stderr, "read_json() failed\n");
-            return 1;
-        }
+        read_json(response.ptr, show_prices);
 
-        // string cleanup
-        free(response.ptr);
-
-        // curl cleanup
         curl_easy_cleanup(curl);
     } else {
         return 1;
@@ -105,7 +98,7 @@ int get_json(char *url, int show_prices) {
     return 0;
 }
 
-int read_json(char *resp, int show_prices) {
+void read_json(char *resp, int show_prices) {
     struct json_object *jobj; // entire json
     struct json_object *base; // base currency
     struct json_object *rates; // currencies base is oncerted to
@@ -125,6 +118,4 @@ int read_json(char *resp, int show_prices) {
     json_object_put(jobj);
     json_object_put(base);
     json_object_put(rates);
-
-    return 0;
 }
