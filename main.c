@@ -1,23 +1,25 @@
 #include <json.h>
 #include <curl/curl.h>
+#include <stdbool.h>
 #include "str.h"
 
 char *help_str = "curr-rate [-hl] BASE [ CONVERT-TO ... ]\n\nmandatory args:\n    BASE        base to convert from\n    CONVERT-TO  converts BASE to following currencies\n\noptional args:\n    -l          list of available currencies\n    -h          show help\n";
 
+// URL tampering stuff
 #define BASE "base="
 #define SYMBOLS "&symbols="
 #define COMMA ","
 
-#define SHOW_PRICE 1
-#define NO_PRICE 0
+#define SHOW_PRICE true
+#define NO_PRICE false
 
 void generate_url(struct string *s, int argcount, char **fullarg);
-int get_json(char *url, int show_prices);
-void read_json(char *resp, int show_prices);
+int get_json(char *url, bool show_prices);
+void read_json(char *resp, bool show_prices);
 
 int main(int argc, char **argv) {
-    int list = 0;
-    int help = 0;
+    bool list = false;
+    bool help = false;
 
     if (argc < 2) { // needs at least one input 
         printf("%s\n", help_str);
@@ -25,9 +27,9 @@ int main(int argc, char **argv) {
     }
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-l"))
-            list = 1;
+            list = true;
         if (!strcmp(argv[i], "-h"))
-            help = 1;
+            help = true;
     }
 
     struct string url;
@@ -68,42 +70,42 @@ void generate_url(struct string *query, int argcount, char **fullarg) {
     query->ptr[query->len] = '\0';
 }
 
-int get_json(char *url, int show_prices) {
+int get_json(char *url, bool show_prices) {
     CURL *curl;
     CURLcode res;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
-    if (curl) {
-        struct string response;
-        init_string(&response);
-
-        curl_easy_setopt(curl, CURLOPT_URL, url); // set rates for now
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
-            fprintf(stderr, "curl_easy_perform() failed\n");
-        curl_easy_strerror(res);
-
-        read_json(response.ptr, show_prices);
-        
-        free(response.ptr)
-        curl_easy_cleanup(curl);
-    } else {
+    if (!curl) { // if failed
         fprintf(stderr, "curl_easy_init() failed\n");
         return 1;
     }
     
+    struct string response;
+    init_string(&response);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url); // set rates for now
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+    res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed\n");
+    curl_easy_strerror(res);
+
+    read_json(response.ptr, show_prices);
+        
+    free(response.ptr)
+    curl_easy_cleanup(curl);
     curl_global_cleanup();
+    
     return 0;
 }
 
-void read_json(char *resp, int show_prices) {
+void read_json(char *resp, bool show_prices) {
     struct json_object *jobj; // entire json
-    struct json_object *base; // base currency
-    struct json_object *rates; // currencies base is oncerted to
+    struct json_object *base; // created to get base currency
+    struct json_object *rates; // currencies the base is converted to
 
     jobj = json_tokener_parse(resp);
 
